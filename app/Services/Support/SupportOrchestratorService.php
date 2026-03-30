@@ -23,7 +23,7 @@ class SupportOrchestratorService
         // 2. Invoke the "Brain"
         // TODO: This is where you would call your chosen Laravel AI Agent or direct LLM integration.
         // For example:
-        // $agent = new SupportAgent();
+        // $agent = new \App\Ai\Agents\SupportAgent();
         // $response = $agent->prompt($context);
         
         // 3. Handle Decisions/Tools

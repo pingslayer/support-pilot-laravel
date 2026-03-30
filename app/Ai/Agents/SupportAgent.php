@@ -3,7 +3,8 @@
 namespace App\Ai\Agents;
 
 use App\Ai\Tools\EscalateToHuman;
-use App\Ai\Tools\SendReply;
+use App\Ai\Tools\GetOrderDetails;
+use App\Ai\Tools\ProcessRefund;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -14,8 +15,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * The `SupportAgent` is the "Brain" of the ticket processing loop.
- * You can implement your prompt logic and tool associations here.
+ * The consolidated ChatAgent. Simple and developer-friendly.
  */
 class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutput
 {
@@ -26,8 +26,7 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
      */
     public function instructions(): Stringable|string
     {
-        // TODO: Define your system instructions here.
-        return 'You are a professional support agent. Your goal is to help customers efficiently.';
+        return 'You are a friendly customer support agent. Help customers with their orders and queries.';
     }
 
     /**
@@ -35,10 +34,10 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
      */
     public function tools(): iterable
     {
-        // TODO: Register your tools here.
         return [
-            // new SendReply,
-            // new EscalateToHuman,
+            new GetOrderDetails,
+            new ProcessRefund,
+            new EscalateToHuman,
         ];
     }
 
@@ -47,11 +46,11 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
      */
     public function schema(JsonSchema $schema): array
     {
-        // TODO: Define the structured output you want your LLM to follow.
         return [
             'confidence' => $schema->integer()->min(0)->max(100)->required(),
             'thought' => $schema->string()->required(),
-            'action' => $schema->string()->enum(['reply', 'escalate', 'needs_more_info'])->required(),
+            'action' => $schema->string()->enum(['reply', 'escalate'])->required(),
+            'reply_message' => $schema->string(),
         ];
     }
 }
