@@ -2,40 +2,85 @@
 
 namespace App\Services\Support;
 
+use App\Models\KnowledgeBaseItem;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Files\Document;
+use Laravel\Ai\Stores;
 
-/**
- * The KnowledgeBaseService is the shell for your RAG (Retrieval Augmented Generation) logic.
- */
 class KnowledgeBaseService
 {
     /**
-     * Retrieve relevant knowledge articles for a given query.
+     * Sync a specific knowledge base item to the local database.
      */
-    public function retrieve(string $query, int $limit = 3): array
+    public function sync(KnowledgeBaseItem $item): void
     {
-        Log::info("RAG: Retrieving articles for query: '{$query}'");
+        // 1. Clear existing chunks for a fresh sync
+        $item->chunks()->delete();
 
-        // TODO: Implement your vector search here.
-        // For example, if using pgvector:
-        // $articles = KnowledgeArticle::query()
-        //     ->orderByRaw('embedding <=> ?', [$this->getEmbedding($query)])
-        //     ->limit($limit)
-        //     ->get();
+        // 2. Split content into overlapping chunks (Sliding Window)
+        $chunks = $this->chunkText($item->content);
 
-        return [
-            ['title' => 'Mock Article 1', 'content' => 'Information regarding refund policy.'],
-            ['title' => 'Mock Article 2', 'content' => 'How to track your order.']
-        ];
+        // 3. Generate Embeddings for all chunks in one batch
+        $response = \Laravel\Ai\Embeddings::for($chunks)->generate();
+        $vectors = $response->embeddings;
+
+        // 4. Store Chunks and Embeddings locally
+        foreach ($chunks as $index => $content) {
+            $embedding = $vectors[$index];
+            
+            // We use a raw SQL insert for the vector column
+            $chunk = $item->chunks()->create(['content' => $content]);
+            
+            // Convert numerical array to PostgreSQL vector format "[1.2, 3.4, ...]"
+            $vectorString = '[' . implode(',', $embedding) . ']';
+            
+            \Illuminate\Support\Facades\DB::statement(
+                'UPDATE knowledge_base_chunks SET embedding = ?::vector WHERE id = ?',
+                [$vectorString, $chunk->id]
+            );
+        }
+
+        $item->update(['last_synced_at' => now()]);
+
+        Log::info("Synced KnowledgeBaseItem #{$item->id} locally with " . count($chunks) . " chunks.");
     }
 
     /**
-     * Re-index an article after updates.
+     * Splits text into smaller chunks for improved semantic search accuracy.
      */
-    public function indexArticle(array $data)
+    private function chunkText(string $text, int $size = 800, int $overlap = 150): array
     {
-        // TODO: Generate embedding and store in DB.
-        Log::info("RAG: Indexing article: {$data['title']}");
+        $chunks = [];
+        $start = 0;
+        $totalLength = mb_strlen($text);
+
+        if ($totalLength <= $size) {
+            return [$text];
+        }
+
+        while ($start < $totalLength) {
+            $chunks[] = mb_substr($text, $start, $size);
+            $start += ($size - $overlap);
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * Local RAG doesn't require managed vector stores.
+     */
+    public function ensureVectorStore(Tenant $tenant): string
+    {
+        return 'local';
+    }
+
+    /**
+     * Delete local chunks.
+     */
+    public function delete(KnowledgeBaseItem $item): void
+    {
+        $item->chunks()->delete();
+        Log::info("Deleted local KnowledgeBaseItem chunks.");
     }
 }

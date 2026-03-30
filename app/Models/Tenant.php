@@ -13,6 +13,7 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'api_key',
+        'vector_store_id',
     ];
 
     public function customers(): HasMany
@@ -23,5 +24,10 @@ class Tenant extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function knowledgeBaseItems(): HasMany
+    {
+        return $this->hasMany(KnowledgeBaseItem::class);
     }
 }

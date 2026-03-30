@@ -28,27 +28,25 @@ class SupportOrchestratorService
             $agent->forUser($ticket);
         }
 
-        if ($message->role !== 'user') {
-            Log::warning("Message for Ticket #{$ticket->id} is not from user. Skipping AI processing.");
-            return;
-        }
+        // Inject Tenant context for local RAG search
+        $agent->tenantId = $ticket->tenant_id;
 
-        // 3. Invoke the Reasoning Loop
-        // The SDK automatically handles Tool calling and persistency.
-        $response = $agent->prompt($message->content, 
-            provider: env('AI_PROVIDER', 'openai'),
-            model: env('AI_MODEL', 'gpt-4o-mini')
-        );
+        // 4. Prompt the Brain
+        $response = $agent->prompt($message->content);
 
-        // 4. Update Ticket with Conversation ID if it's new
+        // 5. Update Ticket with Conversation ID if it's new
         if (!$ticket->ai_conversation_id && $response->conversationId) {
             $ticket->update(['ai_conversation_id' => $response->conversationId]);
         }
 
-        // 5. Process Structured Output
-        $this->processAiDecision($ticket, $response);
+        // 6. Process the structured response
+        // $response is an AgentResponse object, not an array.
+        $data = json_decode($response->text, true);
 
-        Log::info("AI Reasoning complete for Ticket #{$ticket->id}. Action: " . $response['action']);
+        // 5. Process Structured Output
+        $this->processAiDecision($ticket, $data);
+
+        Log::info("AI Reasoning complete for Ticket #{$ticket->id}. Action: " . $data['action']);
     }
 
     /**

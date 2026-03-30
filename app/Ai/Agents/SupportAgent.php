@@ -5,6 +5,7 @@ namespace App\Ai\Agents;
 use App\Ai\Tools\EscalateToHuman;
 use App\Ai\Tools\GetOrderDetails;
 use App\Ai\Tools\ProcessRefund;
+use App\Ai\Tools\SearchKnowledgeBase;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -22,6 +23,11 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
     use Promptable, RemembersConversations;
 
     /**
+     * The ID of the tenant this agent is serving.
+     */
+    public ?int $tenantId = null;
+
+    /**
      * Get the instructions that the agent should follow.
      */
     public function instructions(): string
@@ -31,9 +37,10 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
         
         Behavioral Rules:
         1. Always be polite and professional.
-        2. Use the available tools to fetch real data before providing answers.
-        3. If you are unsure of an answer, or your confidence is low (below 80), use the EscalateToHuman tool.
-        4. Always provide a final answer in the structured output format.";
+        2. Use the available tools to fetch real-time data (Order Details, etc.) before providing answers.
+        3. Use the SearchKnowledgeBase tool to look up company policies, FAQs, and procedures before answering general inquiries.
+        4. If you are unsure of an answer, or your confidence is low (below 80), use the EscalateToHuman tool.
+        5. Always provide a final answer in the structured output format.";
     }
 
     /**
@@ -45,6 +52,7 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
             new GetOrderDetails,
             new ProcessRefund,
             new EscalateToHuman,
+            new SearchKnowledgeBase($this->tenantId),
         ];
     }
 

@@ -30,25 +30,37 @@ class SimulateSupportCommand extends Command
     {
         $this->info("🚀 Starting AI Support Agent Simulation...");
 
-        // 1. Ensure a Tenant exists
+        // 1. Ensure a Tenant and Knowledge Base exists
         $tenant = Tenant::first() ?: Tenant::create([
             'name' => 'Test SaaS Corp',
             'api_key' => 'test_api_key_' . Str::random(8),
         ]);
 
+        if ($tenant->knowledgeBaseItems()->count() === 0) {
+            $this->comment("Seeding sample Knowledge Base Item...");
+            $item = $tenant->knowledgeBaseItems()->create([
+                'title' => 'Standard Return Policy',
+                'content' => 'Our return policy allows customers to return items within 30 days of purchase. Items must be in original condition with tags attached. Refunds are processed within 5-7 business days.',
+            ]);
+
+            $this->comment("Syncing Knowledge Base to Local PostgreSQL (pgvector)...");
+            (new \App\Services\Support\KnowledgeBaseService())->sync($item);
+            $tenant->refresh();
+        }
+
         $this->line("Tenant: <info>{$tenant->name}</info> (ID: {$tenant->id})");
+        $this->line("Knowledge Sync: <comment>Local (Postgres)</comment>");
 
         // 2. Prepare Mock Data
         $fromEmail = 'customer@example.com';
         $fromName = 'John Doe';
-        $subject = 'Order Inquiry';
-        $body = $this->option('body') ?: 'Hi, I would like to know the status of my order #ORD-12345. Can you help?';
+        $subject = 'Inquiry';
+        $body = $this->option('body') ?: 'Hi, I want to know what your return policy is. How many days do I have?';
 
         $this->line("Customer: <info>{$fromName} ({$fromEmail})</info>");
         $this->line("Message: <comment>{$body}</comment>");
 
-        // 3. Dispatch the Job synchronously for easier testing if configured, 
-        // but ewe'll use dispatch() to follow the real production flow.
+        // 3. Dispatch the Job
         $this->comment("Dispatching ProcessIncomingMessageJob...");
 
         ProcessIncomingMessageJob::dispatch(
