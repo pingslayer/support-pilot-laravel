@@ -67,10 +67,10 @@ class ProcessIncomingMessageJob implements ShouldQueue
             'content' => $this->body
         ]);
 
-        // Classify Intent (Phase 1 AI Integration)
-        $intentService = new \App\Services\Ai\IntentService();
-        $intent = $intentService->classify($this->body);
+        // Hand off to the Orchestrator (Phase 2 Skeleton)
+        $orchestrator = new \App\Services\Support\SupportOrchestratorService();
+        $orchestrator->handle($ticket);
 
-        Log::info("Ticket #{$ticket->id} (Tenant #{$this->tenantId}) classified as: {$intent}");
+        Log::info("Ticket #{$ticket->id} (Tenant #{$this->tenantId}) orchestrated.");
     }
 }
