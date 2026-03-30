@@ -24,13 +24,16 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
     /**
      * Get the instructions that the agent should follow.
      */
-    public function instructions(): Stringable|string
+    public function instructions(): string
     {
-        return "You are an intelligent customer support agent for Support Pilot. 
-        Your goal is to assist customers using the provided tools. 
-        Always be polite and human-like. 
-        If you are unsure of an answer, or your confidence is low (below 80), use the EscalateToHuman tool.
-        Always provide a final answer in the structured output format.";
+        return "You are an intelligent customer support agent for a multivendor SaaS platform.
+        Your goal is to help customers with their queries regarding orders, refunds, and technical issues.
+        
+        Behavioral Rules:
+        1. Always be polite and professional.
+        2. Use the available tools to fetch real data before providing answers.
+        3. If you are unsure of an answer, or your confidence is low (below 80), use the EscalateToHuman tool.
+        4. Always provide a final answer in the structured output format.";
     }
 
     /**

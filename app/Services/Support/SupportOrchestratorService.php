@@ -12,29 +12,33 @@ class SupportOrchestratorService
     /**
      * Process an incoming ticket update via the AI reasoning loop.
      */
-    public function handle(Ticket $ticket)
+    public function handle(\App\Models\Message $message)
     {
+        $ticket = $message->ticket;
+
         Log::info("Orchestrating Ticket #{$ticket->id} (Tenant #{$ticket->tenant_id}) using AI SDK.");
 
         // 1. Resolve or Initialize Conversation
-        // We use the ID of the ticket as a unique identifier for the AI conversation.
-        $agent = $ticket->ai_conversation_id 
-            ? SupportAgent::continue($ticket->ai_conversation_id)
-            : new SupportAgent();
+        // We use the Ticket itself as the "User" context for the AI conversation store.
+        $agent = (new SupportAgent());
 
-        // 2. Gather latest message for the prompt
-        $latestMessage = $ticket->messages()->latest()->first();
-        if (!$latestMessage || $latestMessage->role !== 'user') {
-            Log::warning("No new customer message found for Ticket #{$ticket->id}. Skipping AI processing.");
+        if ($ticket->ai_conversation_id) {
+            $agent->continue($ticket->ai_conversation_id, as: $ticket);
+        } else {
+            $agent->forUser($ticket);
+        }
+
+        if ($message->role !== 'user') {
+            Log::warning("Message for Ticket #{$ticket->id} is not from user. Skipping AI processing.");
             return;
         }
 
         // 3. Invoke the Reasoning Loop
         // The SDK automatically handles Tool calling and persistency.
-        $response = $agent->prompt($latestMessage->content);
+        $response = $agent->prompt($message->content);
 
         // 4. Update Ticket with Conversation ID if it's new
-        if (!$ticket->ai_conversation_id) {
+        if (!$ticket->ai_conversation_id && $response->conversationId) {
             $ticket->update(['ai_conversation_id' => $response->conversationId]);
         }
 

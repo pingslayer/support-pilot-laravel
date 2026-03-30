@@ -60,16 +60,16 @@ class ProcessIncomingMessageJob implements ShouldQueue
         }
 
         // Add the message to the ticket
-        Message::create([
+        $message = Message::create([
             'ticket_id' => $ticket->id,
             'sender_type' => 'customer',
             'role' => 'user',
             'content' => $this->body
         ]);
 
-        // Hand off to the Orchestrator (Phase 2 Skeleton)
+        // Hand off to the Orchestrator
         $orchestrator = new \App\Services\Support\SupportOrchestratorService();
-        $orchestrator->handle($ticket);
+        $orchestrator->handle($message);
 
         Log::info("Ticket #{$ticket->id} (Tenant #{$this->tenantId}) orchestrated.");
     }
