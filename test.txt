@@ -1,0 +1,1 @@
+php artisan app:simulate-support --body="Hi, I want to know where my order #ORD-12345 is."
