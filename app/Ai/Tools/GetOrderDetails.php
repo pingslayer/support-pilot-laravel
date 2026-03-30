@@ -14,20 +14,7 @@ class GetOrderDetails implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Retrieve details for a specific order by its order ID.';
-    }
-
-    /**
-     * Execute the tool.
-     */
-    public function handle(Request $request): Stringable|string
-    {
-        // TODO: Logic to fetch order from your database
-        // For example:
-        // $order = Order::where('order_number', $request->order_id)->first();
-        // return json_encode($order);
-
-        return "Mocked Order Details: Status 'Delivered', Total '$99.00', Items: ['Gadget A', 'Widget B']";
+        return 'Retrieve order details (status, items, total) for a specific order ID.';
     }
 
     /**
@@ -36,7 +23,20 @@ class GetOrderDetails implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'order_id' => $schema->string()->required(),
+            'order_id' => $schema->string()->description('The ID of the order to retrieve details for.')->required(),
         ];
+    }
+
+    /**
+     * Execute the tool.
+     */
+    public function handle(Request $request): Stringable|string
+    {
+        $orderId = $request->input('order_id');
+
+        // TODO: Actual DB lookup for the order
+        // return Order::where('order_id', $orderId)->first();
+
+        return "Order #{$orderId} was delivered on Mar 25, 2026. Total was $124.99. Items: 1x Widget A, 2x Gadget B.";
     }
 }

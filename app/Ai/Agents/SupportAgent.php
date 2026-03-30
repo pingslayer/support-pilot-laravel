@@ -15,7 +15,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * The consolidated ChatAgent. Simple and developer-friendly.
+ * The SupportAgent is the "Brain" of the ticket processing loop.
  */
 class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutput
 {
@@ -26,7 +26,11 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
      */
     public function instructions(): Stringable|string
     {
-        return 'You are a friendly customer support agent. Help customers with their orders and queries.';
+        return "You are an intelligent customer support agent for Support Pilot. 
+        Your goal is to assist customers using the provided tools. 
+        Always be polite and human-like. 
+        If you are unsure of an answer, or your confidence is low (below 80), use the EscalateToHuman tool.
+        Always provide a final answer in the structured output format.";
     }
 
     /**
@@ -50,7 +54,7 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
             'confidence' => $schema->integer()->min(0)->max(100)->required(),
             'thought' => $schema->string()->required(),
             'action' => $schema->string()->enum(['reply', 'escalate'])->required(),
-            'reply_message' => $schema->string(),
+            'reply_message' => $schema->string()->description('The message to send to the customer if action is reply.')->required(),
         ];
     }
 }

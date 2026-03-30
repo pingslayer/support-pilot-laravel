@@ -17,6 +17,7 @@ class Ticket extends Model
         'customer_id',
         'subject',
         'status', // open, closed, escalated
+        'ai_conversation_id',
     ];
 
     protected static function booted(): void

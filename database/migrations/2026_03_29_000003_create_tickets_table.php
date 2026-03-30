@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->string('subject');
             $table->enum('status', ['open', 'closed', 'escalated'])->default('open');
+            $table->string('ai_conversation_id')->nullable();
             $table->timestamps();
         });
     }

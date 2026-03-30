@@ -14,19 +14,7 @@ class ProcessRefund implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Process a refund for a specific order and amount.';
-    }
-
-    /**
-     * Execute the tool.
-     */
-    public function handle(Request $request): Stringable|string
-    {
-        // TODO: Logic for Stripe, PayPal, etc.
-        // For example:
-        // $paymentGateway->refund($request['order_id'], $request['amount']);
-
-        return "Refund of {$request['amount']} for Order {$request['order_id']} has been initiated successfully.";
+        return 'Process a refund request for a specific order.';
     }
 
     /**
@@ -35,9 +23,24 @@ class ProcessRefund implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'order_id' => $schema->string()->required(),
-            'amount' => $schema->string()->required(),
-            'reason' => $schema->string()->required(),
+            'order_id' => $schema->string()->description('The ID of the order to refund.')->required(),
+            'amount' => $schema->string()->description('The total refund amount to process.')->required(),
+            'reason' => $schema->string()->description('Reason for the refund.')->required(),
         ];
+    }
+
+    /**
+     * Execute the tool.
+     */
+    public function handle(Request $request): Stringable|string
+    {
+        $orderId = $request->input('order_id');
+        $amount = $request->input('amount');
+        $reason = $request->input('reason');
+
+        // TODO: Logic for Stripe, PayPal, etc.
+        // return Payment::refund($orderId, $amount, $reason);
+
+        return "Successfully initiated a refund of {$amount} for Order #{$orderId}. Reason: {$reason}.";
     }
 }
