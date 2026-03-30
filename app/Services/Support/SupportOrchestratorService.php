@@ -35,7 +35,10 @@ class SupportOrchestratorService
 
         // 3. Invoke the Reasoning Loop
         // The SDK automatically handles Tool calling and persistency.
-        $response = $agent->prompt($message->content);
+        $response = $agent->prompt($message->content, 
+            provider: env('AI_PROVIDER', 'openai'),
+            model: env('AI_MODEL', 'gpt-4o-mini')
+        );
 
         // 4. Update Ticket with Conversation ID if it's new
         if (!$ticket->ai_conversation_id && $response->conversationId) {
