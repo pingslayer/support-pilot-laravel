@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dashboard Resources
     Route::apiResource('tickets', \App\Http\Controllers\Api\TicketController::class)->only(['index', 'show']);
     Route::apiResource('customers', \App\Http\Controllers\Api\CustomerController::class)->only(['index']);
+
+    // Tenant Account & Integration Settings
+    Route::get('/tenant/settings', [\App\Http\Controllers\Api\TenantSettingsController::class, 'show']);
+    Route::put('/tenant/settings', [\App\Http\Controllers\Api\TenantSettingsController::class, 'update']);
 });
 
 /**
