@@ -27,6 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tenant Account & Integration Settings
     Route::get('/tenant/settings', [\App\Http\Controllers\Api\TenantSettingsController::class, 'show']);
     Route::put('/tenant/settings', [\App\Http\Controllers\Api\TenantSettingsController::class, 'update']);
+
+    // RAG Knowledge Base Management
+    Route::apiResource('knowledge-base', \App\Http\Controllers\Api\KnowledgeBaseController::class);
 });
 
 /**
