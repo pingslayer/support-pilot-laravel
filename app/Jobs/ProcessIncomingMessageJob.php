@@ -61,6 +61,7 @@ class ProcessIncomingMessageJob implements ShouldQueue
 
         // Add the message to the ticket
         $message = Message::create([
+            'tenant_id' => $ticket->tenant_id,
             'ticket_id' => $ticket->id,
             'sender_type' => 'customer',
             'role' => 'user',

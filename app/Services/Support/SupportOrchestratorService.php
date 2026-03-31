@@ -62,6 +62,7 @@ class SupportOrchestratorService
             $ticket->update(['status' => 'escalated']);
             
             $message = Message::create([
+                'tenant_id' => $ticket->tenant_id,
                 'ticket_id' => $ticket->id,
                 'sender_type' => 'agent',
                 'role' => 'assistant',
@@ -77,6 +78,7 @@ class SupportOrchestratorService
         // 3. Handle Action: 'reply'
         if ($response['action'] === 'reply' && !empty($response['reply_message'])) {
             $message = Message::create([
+                'tenant_id' => $ticket->tenant_id,
                 'ticket_id' => $ticket->id,
                 'sender_type' => 'agent', 
                 'role' => 'assistant',  

@@ -19,6 +19,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user()->load('tenant');
     });
+
+    // Dashboard Resources
+    Route::apiResource('tickets', \App\Http\Controllers\Api\TicketController::class)->only(['index', 'show']);
+    Route::apiResource('customers', \App\Http\Controllers\Api\CustomerController::class)->only(['index']);
 });
 
 /**
