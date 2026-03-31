@@ -10,6 +10,11 @@ use Stringable;
 class GetOrderDetails implements Tool
 {
     /**
+     * Create a new tool instance.
+     */
+    public function __construct(protected int $tenantId) {}
+
+    /**
      * Get the description of the tool's purpose.
      */
     public function description(): Stringable|string
@@ -34,9 +39,15 @@ class GetOrderDetails implements Tool
     {
         $orderId = $request->input('order_id');
 
-        // TODO: Actual DB lookup for the order
-        // return Order::where('order_id', $orderId)->first();
+        $tenant = \App\Models\Tenant::find($this->tenantId);
+        $integration = new \App\Services\Integrations\ExternalIntegrationService($tenant);
+        
+        $response = $integration->fetchOrder($orderId);
 
-        return "Order #{$orderId} was delivered on Mar 25, 2026. Total was $124.99. Items: 1x Widget A, 2x Gadget B.";
+        if (isset($response['error'])) {
+            return "Error: " . $response['error'];
+        }
+
+        return "Order Information: " . json_encode($response);
     }
 }

@@ -10,6 +10,11 @@ use Stringable;
 class EscalateToHuman implements Tool
 {
     /**
+     * Create a new tool instance.
+     */
+    public function __construct(protected int $tenantId) {}
+
+    /**
      * Get the description of the tool's purpose.
      */
     public function description(): Stringable|string
@@ -34,8 +39,8 @@ class EscalateToHuman implements Tool
     {
         $reason = $request->input('reason');
 
-        // Logic handled in orchestrator based on action: 'escalate'
-        // return $ticket->update(['status' => 'escalated']);
+        // Logic is actually handled in orchestrator based on action: 'escalate'
+        // which is triggered by the brain choosing this tool.
 
         return "Successfully escalated to a human for the following reason: {$reason}";
     }

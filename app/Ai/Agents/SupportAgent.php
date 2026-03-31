@@ -49,9 +49,9 @@ class SupportAgent implements Agent, Conversational, HasTools, HasStructuredOutp
     public function tools(): iterable
     {
         return [
-            new GetOrderDetails,
-            new ProcessRefund,
-            new EscalateToHuman,
+            new GetOrderDetails($this->tenantId),
+            new ProcessRefund($this->tenantId),
+            new EscalateToHuman($this->tenantId),
             new SearchKnowledgeBase($this->tenantId),
         ];
     }

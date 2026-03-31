@@ -61,27 +61,30 @@ class SupportOrchestratorService
         if ($response['action'] === 'escalate') {
             $ticket->update(['status' => 'escalated']);
             
-            Message::create([
+            $message = Message::create([
                 'ticket_id' => $ticket->id,
                 'sender_type' => 'agent',
                 'role' => 'assistant',
                 'content' => "I'm escalating this to a human specialist to ensure you get the best assistance."
             ]);
             
+            // Notify Customer of Escalation
+            $ticket->customer->notify(new \App\Notifications\TicketReplyNotification($ticket->tenant, $message));
+            
             return;
         }
 
         // 3. Handle Action: 'reply'
         if ($response['action'] === 'reply' && !empty($response['reply_message'])) {
-            Message::create([
+            $message = Message::create([
                 'ticket_id' => $ticket->id,
-                'sender_type' => 'agent', // Internal sender_type
-                'role' => 'assistant',  // OpenAI compatible role
+                'sender_type' => 'agent', 
+                'role' => 'assistant',  
                 'content' => $response['reply_message']
             ]);
             
-            // Optionally resolve ticket if the AI thinks it's done (extending schema)
-            // if ($response['confidence'] > 95) $ticket->update(['status' => 'closed']);
+            // Notify Customer of Reply
+            $ticket->customer->notify(new \App\Notifications\TicketReplyNotification($ticket->tenant, $message));
         }
     }
 }

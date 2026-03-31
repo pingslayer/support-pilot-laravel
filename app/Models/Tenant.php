@@ -13,6 +13,8 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'api_key',
+        'external_api_url',
+        'external_api_key',
         'vector_store_id',
     ];
 

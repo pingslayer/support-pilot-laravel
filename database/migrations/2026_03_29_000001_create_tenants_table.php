@@ -12,6 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('api_key')->unique();
+            $table->string('external_api_url')->nullable();
+            $table->string('external_api_key')->nullable();
             $table->timestamps();
         });
     }

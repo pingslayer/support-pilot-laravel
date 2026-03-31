@@ -10,6 +10,11 @@ use Stringable;
 class ProcessRefund implements Tool
 {
     /**
+     * Create a new tool instance.
+     */
+    public function __construct(protected int $tenantId) {}
+
+    /**
      * Get the description of the tool's purpose.
      */
     public function description(): Stringable|string
@@ -35,12 +40,18 @@ class ProcessRefund implements Tool
     public function handle(Request $request): Stringable|string
     {
         $orderId = $request->input('order_id');
-        $amount = $request->input('amount');
+        $amount = (float) $request->input('amount');
         $reason = $request->input('reason');
 
-        // TODO: Logic for Stripe, PayPal, etc.
-        // return Payment::refund($orderId, $amount, $reason);
+        $tenant = \App\Models\Tenant::find($this->tenantId);
+        $integration = new \App\Services\Integrations\ExternalIntegrationService($tenant);
 
-        return "Successfully initiated a refund of {$amount} for Order #{$orderId}. Reason: {$reason}.";
+        $response = $integration->processRefund($orderId, $amount, $reason);
+
+        if (isset($response['error'])) {
+            return "Error: " . $response['error'];
+        }
+
+        return "Successfully processed refund: " . json_encode($response);
     }
 }

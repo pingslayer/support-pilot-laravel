@@ -34,7 +34,16 @@ class SimulateSupportCommand extends Command
         $tenant = Tenant::first() ?: Tenant::create([
             'name' => 'Test SaaS Corp',
             'api_key' => 'test_api_key_' . Str::random(8),
+            'external_api_url' => rtrim(config('app.url'), '/') . '/test/external-store',
+            'external_api_key' => 'mock_secret_key_123',
         ]);
+
+        if (!$tenant->external_api_url) {
+            $tenant->update([
+                'external_api_url' => rtrim(config('app.url'), '/') . '/test/external-store',
+                'external_api_key' => 'mock_secret_key_123',
+            ]);
+        }
 
         if ($tenant->knowledgeBaseItems()->count() === 0) {
             $this->comment("Seeding sample Knowledge Base Item...");
@@ -50,6 +59,7 @@ class SimulateSupportCommand extends Command
 
         $this->line("Tenant: <info>{$tenant->name}</info> (ID: {$tenant->id})");
         $this->line("Knowledge Sync: <comment>Local (Postgres)</comment>");
+        $this->line("External Store: <comment>{$tenant->external_api_url}</comment>");
 
         // 2. Prepare Mock Data
         $fromEmail = 'customer@example.com';
