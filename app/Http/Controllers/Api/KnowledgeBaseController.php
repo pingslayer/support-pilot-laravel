@@ -33,20 +33,32 @@ class KnowledgeBaseController extends Controller
             'content' => 'required|string',
         ]);
 
-        $item = DB::transaction(function () use ($request, $validated, $kbService) {
-            $item = KnowledgeBaseItem::create([
-                'tenant_id' => $request->user()->tenant_id,
-                'title' => $validated['title'],
-                'content' => $validated['content'],
-            ]);
+        try {
+            $item = DB::transaction(function () use ($request, $validated, $kbService) {
+                $item = KnowledgeBaseItem::create([
+                    'tenant_id' => $request->user()->tenant_id,
+                    'title' => $validated['title'],
+                    'content' => $validated['content'],
+                ]);
 
-            // Synchronously chunk text and generate embeddings
-            $kbService->sync($item);
+                // Synchronously chunk text and generate embeddings
+                $kbService->sync($item);
 
-            return $item;
-        });
+                return $item;
+            });
 
-        return response()->json($item, 201);
+            return response()->json($item, 201);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'message' => 'Failed to connect to the AI Provider to generate embeddings. Please check your network connection, or try again later.',
+                'error' => $e->getMessage()
+            ], 503);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while syncing the knowledge base item to the vector store.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -74,15 +86,27 @@ class KnowledgeBaseController extends Controller
 
         $requiresSync = $item->content !== $validated['content'];
 
-        DB::transaction(function () use ($item, $validated, $kbService, $requiresSync) {
-            $item->update($validated);
+        try {
+            DB::transaction(function () use ($item, $validated, $kbService, $requiresSync) {
+                $item->update($validated);
 
-            if ($requiresSync) {
-                $kbService->sync($item);
-            }
-        });
+                if ($requiresSync) {
+                    $kbService->sync($item);
+                }
+            });
 
-        return response()->json($item);
+            return response()->json($item);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'message' => 'Failed to connect to the AI Provider to generate embeddings. Please check your network connection.',
+                'error' => $e->getMessage()
+            ], 503);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while syncing the knowledge base item.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
