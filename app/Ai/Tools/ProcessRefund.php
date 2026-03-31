@@ -39,9 +39,9 @@ class ProcessRefund implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        $orderId = $request->input('order_id');
-        $amount = (float) $request->input('amount');
-        $reason = $request->input('reason');
+        $orderId = (string) $request['order_id'];
+        $amount = (float) $request['amount'];
+        $reason = (string) $request['reason'];
 
         $tenant = \App\Models\Tenant::find($this->tenantId);
         $integration = new \App\Services\Integrations\ExternalIntegrationService($tenant);

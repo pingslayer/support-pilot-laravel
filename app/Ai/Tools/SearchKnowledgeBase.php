@@ -39,10 +39,10 @@ class SearchKnowledgeBase implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        $query = $request->input('query');
+        $query = (string) $request['query'];
 
         // 1. Generate an embedding for the search query
-        $response = Embeddings::for($query)->generate();
+        $response = Embeddings::for([$query])->generate();
         $queryVector = '[' . implode(',', $response->embeddings[0]) . ']';
 
         // 2. Perform Nearest Neighbor Search using pgvector's <=> (cosine distance)

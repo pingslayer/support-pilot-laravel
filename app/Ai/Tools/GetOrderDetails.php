@@ -37,7 +37,7 @@ class GetOrderDetails implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        $orderId = $request->input('order_id');
+        $orderId = (string) $request['order_id'];
 
         $tenant = \App\Models\Tenant::find($this->tenantId);
         $integration = new \App\Services\Integrations\ExternalIntegrationService($tenant);
